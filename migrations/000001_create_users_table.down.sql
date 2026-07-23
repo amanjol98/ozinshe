@@ -1,0 +1,19 @@
+DROP TABLE IF EXISTS movie_screenshots;
+
+DROP TABLE IF EXISTS episodes;
+
+DROP TABLE IF EXISTS seasons;
+
+DROP TABLE IF EXISTS favorites;
+
+DROP TABLE IF EXISTS movie_categories;
+
+DROP TABLE IF EXISTS movie_genres;
+
+DROP TABLE IF EXISTS categories;
+
+DROP TABLE IF EXISTS genres;
+
+DROP TABLE IF EXISTS movies;
+
+DROP TABLE IF EXISTS users;
