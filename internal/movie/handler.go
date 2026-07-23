@@ -11,7 +11,7 @@ type MovieHandler struct {
 	service *MovieService
 }
 
-type createMovieRequest struct {
+type movieRequest struct {
 	Title       string `json:"title"`
 	ReleaseYear int    `json:"release_year"`
 	Description string `json:"description"`
@@ -58,7 +58,11 @@ func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	movie, err := h.service.GetByID(ctx, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, ErrMovieNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Ошибка при получении фильма", http.StatusInternalServerError)
 		return
 	}
 
@@ -73,7 +77,7 @@ func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var request createMovieRequest
+	var request movieRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -136,7 +140,7 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var request createMovieRequest
+	var request movieRequest
 
 	idString := r.PathValue("id")
 	id, err := strconv.Atoi(idString)

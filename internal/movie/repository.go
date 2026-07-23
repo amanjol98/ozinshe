@@ -97,8 +97,12 @@ func (r *MovieRepository) GetByID(ctx context.Context, id int) (Movie, error) {
 		&movie.VideoID,
 	)
 
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Movie{}, ErrMovieNotFound
+	}
+
 	if err != nil {
-		return Movie{}, nil
+		return Movie{}, err
 	}
 
 	return movie, nil
