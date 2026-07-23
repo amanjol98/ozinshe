@@ -7,6 +7,7 @@ import (
 	"ozinshe/internal/database"
 	"ozinshe/internal/genres"
 	"ozinshe/internal/movie"
+	"ozinshe/internal/movie_genres"
 
 	"github.com/joho/godotenv"
 )
@@ -46,6 +47,12 @@ func main() {
 	http.HandleFunc("POST /genres", genreHandler.CreateGenre)
 	http.HandleFunc("DELETE /genres/{id}", genreHandler.DeleteGenre)
 	http.HandleFunc("PATCH /genres/{id}", genreHandler.UpdateGenre)
+
+	movieGenresRepo := movie_genres.NewMovieGenreRepository(conn)
+	movieGenresService := movie_genres.NewMovieGenreService(movieGenresRepo)
+	movieGenresHandler := movie_genres.NewMovieGenreHandler(movieGenresService)
+
+	http.HandleFunc("POST /movies/{id}/genres", movieGenresHandler.AddGenreToMovie)
 
 	log.Println("Сервер слушает на порту :8080...")
 
