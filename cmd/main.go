@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"ozinshe/internal/categories"
 	"ozinshe/internal/database"
 	"ozinshe/internal/genres"
 	"ozinshe/internal/movie"
@@ -55,6 +56,16 @@ func main() {
 	http.HandleFunc("POST /movies/{id}/genres", movieGenresHandler.AddGenreToMovie)
 	http.HandleFunc("GET /movies/{id}/genres", movieGenresHandler.GetGenresOfMovie)
 	http.HandleFunc("DELETE /movies/{id}/genres", movieGenresHandler.DeleteGenreFromMovie)
+
+	categoriesRepo := categories.NewCategoryRepository(conn)
+	categoriesService := categories.NewCategoryService(categoriesRepo)
+	categoriesHandler := categories.NewCategoryHandler(categoriesService)
+
+	http.HandleFunc("GET /categories", categoriesHandler.GetCategories)
+	http.HandleFunc("GET /categories/{id}", categoriesHandler.GetCategoryByID)
+	http.HandleFunc("POST /categories", categoriesHandler.CreateCategory)
+	http.HandleFunc("DELETE /categories/{id}", categoriesHandler.DeleteCategory)
+	http.HandleFunc("PATCH /categories/{id}", categoriesHandler.UpdateCategory)
 
 	log.Println("Сервер слушает на порту :8080...")
 
