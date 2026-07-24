@@ -53,6 +53,8 @@ func main() {
 	movieGenresHandler := movie_genres.NewMovieGenreHandler(movieGenresService)
 
 	http.HandleFunc("POST /movies/{id}/genres", movieGenresHandler.AddGenreToMovie)
+	http.HandleFunc("GET /movies/{id}/genres", movieGenresHandler.GetGenresOfMovie)
+	http.HandleFunc("DELETE /movies/{id}/genres", movieGenresHandler.DeleteGenreFromMovie)
 
 	log.Println("Сервер слушает на порту :8080...")
 
