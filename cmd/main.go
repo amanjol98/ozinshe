@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"ozinshe/internal/categories"
 	"ozinshe/internal/database"
 	"ozinshe/internal/genres"
 	"ozinshe/internal/movie"
+	"ozinshe/internal/movie_categories"
 	"ozinshe/internal/movie_genres"
 
 	"github.com/joho/godotenv"
@@ -55,6 +57,24 @@ func main() {
 	http.HandleFunc("POST /movies/{id}/genres", movieGenresHandler.AddGenreToMovie)
 	http.HandleFunc("GET /movies/{id}/genres", movieGenresHandler.GetGenresOfMovie)
 	http.HandleFunc("DELETE /movies/{id}/genres", movieGenresHandler.DeleteGenreFromMovie)
+
+	categoriesRepo := categories.NewCategoryRepository(conn)
+	categoriesService := categories.NewCategoryService(categoriesRepo)
+	categoriesHandler := categories.NewCategoryHandler(categoriesService)
+
+	http.HandleFunc("GET /categories", categoriesHandler.GetCategories)
+	http.HandleFunc("GET /categories/{id}", categoriesHandler.GetCategoryByID)
+	http.HandleFunc("POST /categories", categoriesHandler.CreateCategory)
+	http.HandleFunc("DELETE /categories/{id}", categoriesHandler.DeleteCategory)
+	http.HandleFunc("PATCH /categories/{id}", categoriesHandler.UpdateCategory)
+
+	movieCategoriesRepo := movie_categories.NewMovieCategoryRepositry(conn)
+	movieCategoriesService := movie_categories.NewMovieCategoryService(movieCategoriesRepo)
+	movieCategoriesHandler := movie_categories.NewMovieCategoryHandler(movieCategoriesService)
+
+	http.HandleFunc("POST /movies/{id}/categories", movieCategoriesHandler.AddCategoryToMovie)
+	http.HandleFunc("GET /movies/{id}/categories", movieCategoriesHandler.GetMovieCategories)
+	http.HandleFunc("DELETE /movies/{id}/categories", movieCategoriesHandler.DeleteCategoryFromMovie)
 
 	log.Println("Сервер слушает на порту :8080...")
 
