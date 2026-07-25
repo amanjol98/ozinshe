@@ -28,10 +28,24 @@ func main() {
 
 	defer conn.Close(ctx)
 
+	genreRepo := genres.NewGenreRepository(conn)
+	genreService := genres.NewGenreService(genreRepo)
+	genreHandler := genres.NewGenreHandler(genreService)
+
+	movieGenresRepo := movie_genres.NewMovieGenreRepository(conn)
+	movieGenresService := movie_genres.NewMovieGenreService(movieGenresRepo)
+	movieGenresHandler := movie_genres.NewMovieGenreHandler(movieGenresService)
+
+	categoriesRepo := categories.NewCategoryRepository(conn)
+	categoriesService := categories.NewCategoryService(categoriesRepo)
+	categoriesHandler := categories.NewCategoryHandler(categoriesService)
+
+	movieCategoriesRepo := movie_categories.NewMovieCategoryRepositry(conn)
+	movieCategoriesService := movie_categories.NewMovieCategoryService(movieCategoriesRepo)
+	movieCategoriesHandler := movie_categories.NewMovieCategoryHandler(movieCategoriesService)
+
 	movieRepo := movie.NewMovieRepository(conn)
-
-	movieService := movie.NewMovieService(movieRepo)
-
+	movieService := movie.NewMovieService(movieRepo, movieGenresService, movieCategoriesService)
 	movieHandler := movie.NewMovieHandler(movieService)
 
 	http.HandleFunc("GET /movies", movieHandler.GetAll)
@@ -40,37 +54,21 @@ func main() {
 	http.HandleFunc("DELETE /movies/{id}", movieHandler.DeleteMovie)
 	http.HandleFunc("PUT /movies/{id}", movieHandler.UpdateMovie)
 
-	genreRepo := genres.NewGenreRepository(conn)
-	genreService := genres.NewGenreService(genreRepo)
-	genreHandler := genres.NewGenreHandler(genreService)
-
 	http.HandleFunc("GET /genres", genreHandler.GetAll)
 	http.HandleFunc("GET /genres/{id}", genreHandler.GetGenreByID)
 	http.HandleFunc("POST /genres", genreHandler.CreateGenre)
 	http.HandleFunc("DELETE /genres/{id}", genreHandler.DeleteGenre)
 	http.HandleFunc("PATCH /genres/{id}", genreHandler.UpdateGenre)
 
-	movieGenresRepo := movie_genres.NewMovieGenreRepository(conn)
-	movieGenresService := movie_genres.NewMovieGenreService(movieGenresRepo)
-	movieGenresHandler := movie_genres.NewMovieGenreHandler(movieGenresService)
-
 	http.HandleFunc("POST /movies/{id}/genres", movieGenresHandler.AddGenreToMovie)
 	http.HandleFunc("GET /movies/{id}/genres", movieGenresHandler.GetGenresOfMovie)
 	http.HandleFunc("DELETE /movies/{id}/genres", movieGenresHandler.DeleteGenreFromMovie)
-
-	categoriesRepo := categories.NewCategoryRepository(conn)
-	categoriesService := categories.NewCategoryService(categoriesRepo)
-	categoriesHandler := categories.NewCategoryHandler(categoriesService)
 
 	http.HandleFunc("GET /categories", categoriesHandler.GetCategories)
 	http.HandleFunc("GET /categories/{id}", categoriesHandler.GetCategoryByID)
 	http.HandleFunc("POST /categories", categoriesHandler.CreateCategory)
 	http.HandleFunc("DELETE /categories/{id}", categoriesHandler.DeleteCategory)
 	http.HandleFunc("PATCH /categories/{id}", categoriesHandler.UpdateCategory)
-
-	movieCategoriesRepo := movie_categories.NewMovieCategoryRepositry(conn)
-	movieCategoriesService := movie_categories.NewMovieCategoryService(movieCategoriesRepo)
-	movieCategoriesHandler := movie_categories.NewMovieCategoryHandler(movieCategoriesService)
 
 	http.HandleFunc("POST /movies/{id}/categories", movieCategoriesHandler.AddCategoryToMovie)
 	http.HandleFunc("GET /movies/{id}/categories", movieCategoriesHandler.GetMovieCategories)

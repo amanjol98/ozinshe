@@ -3,16 +3,27 @@ package movie
 import (
 	"context"
 	"fmt"
+	"ozinshe/internal/movie_categories"
+	"ozinshe/internal/movie_genres"
 	"strings"
 )
 
 type MovieService struct {
 	repo *MovieRepository
+
+	genreService    *movie_genres.MovieGenreService
+	categoryService *movie_categories.MovieCategoryService
 }
 
-func NewMovieService(repo *MovieRepository) *MovieService {
+func NewMovieService(
+	repo *MovieRepository,
+	genreService *movie_genres.MovieGenreService,
+	categoryService *movie_categories.MovieCategoryService,
+) *MovieService {
 	return &MovieService{
-		repo: repo,
+		repo:            repo,
+		genreService:    genreService,
+		categoryService: categoryService,
 	}
 }
 
@@ -20,8 +31,26 @@ func (s *MovieService) GetAll(ctx context.Context) ([]Movie, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *MovieService) GetByID(ctx context.Context, id int) (Movie, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *MovieService) GetByID(ctx context.Context, id int) (MovieResponse, error) {
+	movie, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return MovieResponse{}, err
+	}
+	genres, err := s.genreService.GetGenresOfMovie(ctx, id)
+	if err != nil {
+		return MovieResponse{}, err
+	}
+	categories, err := s.categoryService.GetMovieCategories(ctx, id)
+	if err != nil {
+		return MovieResponse{}, err
+	}
+
+	response := MovieResponse{
+		Movie:      movie,
+		Genres:     genres,
+		Categories: categories,
+	}
+	return response, nil
 }
 
 func (s *MovieService) CreateMovie(
