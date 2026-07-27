@@ -3,12 +3,13 @@ package movie
 import (
 	"ozinshe/internal/categories"
 	"ozinshe/internal/genres"
+	"ozinshe/internal/seasons"
 )
 
 type Movie struct {
 	ID          int    `json:"id"`
 	Title       string `json:"title"`
-	ReleaseYear int    `json:"release_yesr"`
+	ReleaseYear int    `json:"release_year"`
 	Description string `json:"description"`
 	Duration    int    `json:"duration"`
 	PosterURL   string `json:"poster_url"`
@@ -21,4 +22,5 @@ type MovieResponse struct {
 	Movie      Movie                 `json:"movie"`
 	Genres     []genres.Genre        `json:"genres"`
 	Categories []categories.Category `json:"categories"`
+	Seasons    []seasons.Season      `json:"seasons"`
 }

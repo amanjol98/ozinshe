@@ -3,8 +3,10 @@ package movie
 import (
 	"context"
 	"fmt"
+	"ozinshe/internal/episodes"
 	"ozinshe/internal/movie_categories"
 	"ozinshe/internal/movie_genres"
+	"ozinshe/internal/seasons"
 	"strings"
 )
 
@@ -13,17 +15,24 @@ type MovieService struct {
 
 	genreService    *movie_genres.MovieGenreService
 	categoryService *movie_categories.MovieCategoryService
+
+	seasonService  *seasons.SeasonService
+	episodeService *episodes.EpisodeService
 }
 
 func NewMovieService(
 	repo *MovieRepository,
 	genreService *movie_genres.MovieGenreService,
 	categoryService *movie_categories.MovieCategoryService,
+	seasonService *seasons.SeasonService,
+	episodeService *episodes.EpisodeService,
 ) *MovieService {
 	return &MovieService{
 		repo:            repo,
 		genreService:    genreService,
 		categoryService: categoryService,
+		seasonService:   seasonService,
+		episodeService:  episodeService,
 	}
 }
 
@@ -45,10 +54,25 @@ func (s *MovieService) GetByID(ctx context.Context, id int) (MovieResponse, erro
 		return MovieResponse{}, err
 	}
 
+	seasons, err := s.seasonService.GetSeasons(ctx, id)
+	if err != nil {
+		return MovieResponse{}, err
+	}
+
+	for i := range seasons {
+		episodes, err := s.episodeService.GetEpisodes(ctx, seasons[i].ID)
+		if err != nil {
+			return MovieResponse{}, err
+		}
+
+		seasons[i].Episodes = episodes
+	}
+
 	response := MovieResponse{
 		Movie:      movie,
 		Genres:     genres,
 		Categories: categories,
+		Seasons:    seasons,
 	}
 	return response, nil
 }
