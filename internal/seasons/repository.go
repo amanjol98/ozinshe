@@ -2,6 +2,7 @@ package seasons
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -14,14 +15,15 @@ func NewSeasonRepository(db *pgx.Conn) *SeasonRepository {
 	return &SeasonRepository{db: db}
 }
 
+var ErrSeasonNotFound = errors.New("Нет сезона с таким ID")
+
 func (r *SeasonRepository) GetSeasons(ctx context.Context, movieID int) ([]Season, error) {
 	sqlQuery := `
 	SELECT
 	id,
 	season_number
 	FROM seasons
-	JOIN movie_id ON seasons.movie_id=movies.id
-	WHERE movies.id=$1;
+	WHERE seasons.movie_id=$1;
 	`
 
 	rows, err := r.db.Query(ctx, sqlQuery, movieID)
@@ -36,7 +38,7 @@ func (r *SeasonRepository) GetSeasons(ctx context.Context, movieID int) ([]Seaso
 		var season Season
 		err := rows.Scan(
 			&season.ID,
-			season.SeasonNumber,
+			&season.SeasonNumber,
 		)
 
 		if err != nil {
@@ -51,4 +53,32 @@ func (r *SeasonRepository) GetSeasons(ctx context.Context, movieID int) ([]Seaso
 	}
 
 	return seasons, nil
+}
+
+func (r *SeasonRepository) AddSeasonToMovie(ctx context.Context, movieID, seasonNumber int) error {
+	sqlQuery := `
+	INSERT INTO seasons (movie_id, season_number)
+	VALUES($1,$2);
+	`
+
+	_, err := r.db.Exec(ctx, sqlQuery, movieID, seasonNumber)
+
+	return err
+}
+
+func (r *SeasonRepository) DeleteSeasonFromMovie(ctx context.Context, seasonID int) error {
+	sqlQuery := `
+	DELETE FROM seasons
+	WHERE id=$1;
+	`
+
+	result, err := r.db.Exec(ctx, sqlQuery, seasonID)
+	if err != nil {
+		return err
+	}
+	if result.RowsAffected() == 0 {
+		return ErrSeasonNotFound
+	}
+
+	return nil
 }
