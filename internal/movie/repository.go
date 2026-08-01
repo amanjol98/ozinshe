@@ -17,8 +17,15 @@ func NewMovieRepository(db *pgx.Conn) *MovieRepository {
 
 var ErrMovieNotFound = errors.New("Нет фильма с таким ID")
 
-func (r *MovieRepository) GetAll(ctx context.Context) ([]Movie, error) {
-	sqlQuery := `
+func (r *MovieRepository) GetAll(ctx context.Context, search string, limit, offset int) ([]Movie, error) {
+
+	var (
+		sqlQuery string
+		args     []any
+	)
+
+	if search == "" {
+		sqlQuery = `
 	SELECT 
 	id,
 	title,
@@ -29,9 +36,33 @@ func (r *MovieRepository) GetAll(ctx context.Context) ([]Movie, error) {
 	director,
 	producer,
 	video_id
-	FROM movies;
+	FROM movies
+	LIMIT $1
+	OFFSET $2;
 	`
-	rows, err := r.db.Query(ctx, sqlQuery)
+		args = append(args, limit, offset)
+	} else {
+		sqlQuery = `
+	SELECT 
+	id,
+	title,
+	release_year,
+	description,
+	duration,
+	poster_url,
+	director,
+	producer,
+	video_id
+	FROM movies
+	WHERE title ILIKE $3
+	LIMIT $1
+	OFFSET $2;
+	`
+
+		args = append(args, limit, offset, "%"+search+"%")
+	}
+
+	rows, err := r.db.Query(ctx, sqlQuery, args...)
 	if err != nil {
 		return nil, err
 	}

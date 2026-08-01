@@ -20,6 +20,8 @@ type movieRequest struct {
 	Director    string `json:"director"`
 	Producer    string `json:"producer"`
 	VideoID     string `json:"video_id"`
+	GenreIDs    []int  `json:"genre_ids"`
+	CategoryIDs []int  `json:"category_ids"`
 }
 
 func NewMovieHandler(service *MovieService) *MovieHandler {
@@ -30,8 +32,48 @@ func NewMovieHandler(service *MovieService) *MovieHandler {
 
 func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	var err error
 
-	movies, err := h.service.GetAll(ctx)
+	search := r.URL.Query().Get("search")
+
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	limit := 10
+	page := 1
+
+	if limitStr != "" {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			http.Error(w, "неверный limit", http.StatusBadRequest)
+			return
+		}
+		if limit < 1 {
+			http.Error(w, "limit должен быть больше 0", http.StatusBadRequest)
+			return
+		}
+
+		if limit > 100 {
+			http.Error(w, "максимальный limit 100", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			http.Error(w, "неверный page", http.StatusBadRequest)
+			return
+		}
+		if page < 1 {
+			http.Error(w, "page должен быть больше 0", http.StatusBadRequest)
+			return
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	movies, err := h.service.GetAll(ctx, search, limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -95,6 +137,8 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 		request.Director,
 		request.Producer,
 		request.VideoID,
+		request.GenreIDs,
+		request.CategoryIDs,
 	)
 
 	if err != nil {

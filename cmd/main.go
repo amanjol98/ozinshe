@@ -11,6 +11,7 @@ import (
 	"ozinshe/internal/movie"
 	"ozinshe/internal/movie_categories"
 	"ozinshe/internal/movie_genres"
+	"ozinshe/internal/movie_screenshots"
 	"ozinshe/internal/seasons"
 
 	"github.com/joho/godotenv"
@@ -54,6 +55,10 @@ func main() {
 	seasonService := seasons.NewSeasonService(seasonRepo)
 	seasonHandler := seasons.NewSeasonHandler(seasonService)
 
+	screensotRepo := movie_screenshots.NewMovieScreenshotsRepository(conn)
+	screensotService := movie_screenshots.NewMovieScreenshotsService(screensotRepo)
+	screensotHandler := movie_screenshots.NewMovieScreenshotsHandler(screensotService)
+
 	movieRepo := movie.NewMovieRepository(conn)
 	movieService := movie.NewMovieService(
 		movieRepo,
@@ -61,6 +66,7 @@ func main() {
 		movieCategoriesService,
 		seasonService,
 		episodeService,
+		screensotService,
 	)
 	movieHandler := movie.NewMovieHandler(movieService)
 
@@ -95,6 +101,10 @@ func main() {
 
 	http.HandleFunc("POST /seasons/{id}/episodes", episodeHandler.AddEpisodeToSeason)
 	http.HandleFunc("DELETE /episodes/{id}", episodeHandler.DeleteEpisode)
+
+	http.HandleFunc("POST /movies/{id}/screenshots", screensotHandler.AddScreenshotsToMovie)
+	http.HandleFunc("GET /movies/{id}/screenshots", screensotHandler.GetScreenshots)
+	http.HandleFunc("DELETE /screenshots/{id}", screensotHandler.DeleteScreenshot)
 
 	log.Println("Сервер слушает на порту :8080...")
 
