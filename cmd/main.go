@@ -5,16 +5,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"ozinshe/internal/categories"
 	"ozinshe/internal/database"
-	"ozinshe/internal/episodes"
-	"ozinshe/internal/genres"
-	"ozinshe/internal/movie"
-	"ozinshe/internal/movie_categories"
-	"ozinshe/internal/movie_genres"
-	"ozinshe/internal/movie_screenshots"
-	"ozinshe/internal/seasons"
-	"ozinshe/internal/users"
+	"ozinshe/internal/handlers"
+	"ozinshe/internal/middleware"
+	"ozinshe/internal/repositories"
+	"ozinshe/internal/services"
 
 	"github.com/joho/godotenv"
 )
@@ -35,42 +30,42 @@ func main() {
 
 	defer conn.Close(ctx)
 
-	genreRepo := genres.NewGenreRepository(conn)
-	genreService := genres.NewGenreService(genreRepo)
-	genreHandler := genres.NewGenreHandler(genreService)
+	genreRepo := repositories.NewGenreRepository(conn)
+	genreService := services.NewGenreService(genreRepo)
+	genreHandler := handlers.NewGenreHandler(genreService)
 
-	movieGenresRepo := movie_genres.NewMovieGenreRepository(conn)
-	movieGenresService := movie_genres.NewMovieGenreService(movieGenresRepo)
-	movieGenresHandler := movie_genres.NewMovieGenreHandler(movieGenresService)
+	movieGenresRepo := repositories.NewMovieGenreRepository(conn)
+	movieGenresService := services.NewMovieGenreService(movieGenresRepo)
+	movieGenresHandler := handlers.NewMovieGenreHandler(movieGenresService)
 
-	categoriesRepo := categories.NewCategoryRepository(conn)
-	categoriesService := categories.NewCategoryService(categoriesRepo)
-	categoriesHandler := categories.NewCategoryHandler(categoriesService)
+	categoriesRepo := repositories.NewCategoryRepository(conn)
+	categoriesService := services.NewCategoryService(categoriesRepo)
+	categoriesHandler := handlers.NewCategoryHandler(categoriesService)
 
-	movieCategoriesRepo := movie_categories.NewMovieCategoryRepositry(conn)
-	movieCategoriesService := movie_categories.NewMovieCategoryService(movieCategoriesRepo)
-	movieCategoriesHandler := movie_categories.NewMovieCategoryHandler(movieCategoriesService)
+	movieCategoriesRepo := repositories.NewMovieCategoryRepositry(conn)
+	movieCategoriesService := services.NewMovieCategoryService(movieCategoriesRepo)
+	movieCategoriesHandler := handlers.NewMovieCategoryHandler(movieCategoriesService)
 
-	episodeRepo := episodes.NewEpisodeRepository(conn)
-	episodeService := episodes.NewEpisodeService(episodeRepo)
-	episodeHandler := episodes.NewEpisodeHandler(episodeService)
+	episodeRepo := repositories.NewEpisodeRepository(conn)
+	episodeService := services.NewEpisodeService(episodeRepo)
+	episodeHandler := handlers.NewEpisodeHandler(episodeService)
 
-	seasonRepo := seasons.NewSeasonRepository(conn)
-	seasonService := seasons.NewSeasonService(seasonRepo)
-	seasonHandler := seasons.NewSeasonHandler(seasonService)
+	seasonRepo := repositories.NewSeasonRepository(conn)
+	seasonService := services.NewSeasonService(seasonRepo)
+	seasonHandler := handlers.NewSeasonHandler(seasonService)
 
-	screensotRepo := movie_screenshots.NewMovieScreenshotsRepository(conn)
-	screensotService := movie_screenshots.NewMovieScreenshotsService(screensotRepo)
-	screensotHandler := movie_screenshots.NewMovieScreenshotsHandler(screensotService)
+	screensotRepo := repositories.NewMovieScreenshotsRepository(conn)
+	screensotService := services.NewMovieScreenshotsService(screensotRepo)
+	screensotHandler := handlers.NewMovieScreenshotsHandler(screensotService)
 
-	userRepo := users.NewUserRepository(conn)
-	tokenService := users.NewTokenService(secretKey)
-	authMiddleware := users.NewAuthMiddleware(tokenService)
-	userService := users.NewUserService(userRepo, tokenService)
-	userHandler := users.NewUserHandler(userService)
+	userRepo := repositories.NewUserRepository(conn)
+	tokenService := middleware.NewTokenService(secretKey)
+	authMiddleware := middleware.NewAuthMiddleware(tokenService)
+	userService := services.NewUserService(userRepo, tokenService)
+	userHandler := handlers.NewUserHandler(userService)
 
-	movieRepo := movie.NewMovieRepository(conn)
-	movieService := movie.NewMovieService(
+	movieRepo := repositories.NewMovieRepository(conn)
+	movieService := services.NewMovieService(
 		movieRepo,
 		movieGenresService,
 		movieCategoriesService,
@@ -78,7 +73,7 @@ func main() {
 		episodeService,
 		screensotService,
 	)
-	movieHandler := movie.NewMovieHandler(movieService)
+	movieHandler := handlers.NewMovieHandler(movieService)
 
 	http.HandleFunc("GET /movies", movieHandler.GetAll)
 	http.HandleFunc("GET /movies/{id}", movieHandler.GetByID)
