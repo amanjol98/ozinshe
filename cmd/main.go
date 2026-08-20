@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"ozinshe/internal/categories"
 	"ozinshe/internal/database"
 	"ozinshe/internal/episodes"
@@ -13,6 +14,7 @@ import (
 	"ozinshe/internal/movie_genres"
 	"ozinshe/internal/movie_screenshots"
 	"ozinshe/internal/seasons"
+	"ozinshe/internal/users"
 
 	"github.com/joho/godotenv"
 )
@@ -28,6 +30,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	secretKey := os.Getenv("JWT_SECRET")
 
 	defer conn.Close(ctx)
 
@@ -58,6 +62,12 @@ func main() {
 	screensotRepo := movie_screenshots.NewMovieScreenshotsRepository(conn)
 	screensotService := movie_screenshots.NewMovieScreenshotsService(screensotRepo)
 	screensotHandler := movie_screenshots.NewMovieScreenshotsHandler(screensotService)
+
+	userRepo := users.NewUserRepository(conn)
+	tokenService := users.NewTokenService(secretKey)
+	authMiddleware := users.NewAuthMiddleware(tokenService)
+	userService := users.NewUserService(userRepo, tokenService)
+	userHandler := users.NewUserHandler(userService)
 
 	movieRepo := movie.NewMovieRepository(conn)
 	movieService := movie.NewMovieService(
@@ -106,8 +116,12 @@ func main() {
 	http.HandleFunc("GET /movies/{id}/screenshots", screensotHandler.GetScreenshots)
 	http.HandleFunc("DELETE /screenshots/{id}", screensotHandler.DeleteScreenshot)
 
+	http.HandleFunc("POST /register", userHandler.Register)
+	http.HandleFunc("POST /login", userHandler.Login)
+
+	http.Handle("GET /users/me", authMiddleware.Auth(http.HandlerFunc(userHandler.Me)))
+
 	log.Println("Сервер слушает на порту :8080...")
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
