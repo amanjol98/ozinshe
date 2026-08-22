@@ -84,4 +84,5 @@ type User struct {
 	Password    string    `json:"-"`
 	PhoneNumber string    `json:"phone_number"`
 	BornAt      time.Time `json:"born_at"`
+	Role        string    `json:"role"`
 }

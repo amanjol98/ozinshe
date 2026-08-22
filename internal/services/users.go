@@ -4,21 +4,40 @@ import (
 	"context"
 	"errors"
 	"ozinshe/internal/middleware"
+	"ozinshe/internal/models"
 	"ozinshe/internal/repositories"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserRepository interface {
+	Register(
+		ctx context.Context,
+		name, email, password, phone_number string,
+		born_at time.Time,
+	) error
+
+	GetByEmail(
+		ctx context.Context,
+		email string,
+	) (
+		models.User,
+		error,
+	)
+
+	GetByID(ctx context.Context, id int) (models.User, error)
+}
+
 type UserService struct {
-	repo         *repositories.UserRepository
+	repo         UserRepository
 	tokenService *middleware.TokenService
 }
 
-func NewUserService(repo *repositories.UserRepository, tokenservice *middleware.TokenService) *UserService {
+func NewUserService(repo UserRepository, tokenService *middleware.TokenService) *UserService {
 	return &UserService{
 		repo:         repo,
-		tokenService: tokenservice,
+		tokenService: tokenService,
 	}
 }
 
@@ -54,10 +73,14 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := s.tokenService.GenerateToken(user.ID)
+	token, err := s.tokenService.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return "", err
 	}
 
 	return token, nil
+}
+
+func (s *UserService) GetByID(ctx context.Context, id int) (models.User, error) {
+	return s.repo.GetByID(ctx, id)
 }

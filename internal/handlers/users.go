@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"ozinshe/internal/middleware"
+	"ozinshe/internal/repositories"
 	"ozinshe/internal/services"
 	"time"
 )
@@ -99,20 +100,33 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
-
 	if !ok {
 		http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	user, err := h.service.GetByID(r.Context(), userID)
 
-	response := map[string]int{
-		"user_id": userID,
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			http.Error(w, "Пользователь не найден", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
 	}
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *UserHandler) Test(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+
+	w.Write([]byte("Доступ разрешен"))
 }
