@@ -55,7 +55,7 @@ func (h *SeasonHandler) AddSeasonToMovie(w http.ResponseWriter, r *http.Request)
 func (h *SeasonHandler) DeleteSeasonFromMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	sID := r.PathValue("seasonID")
+	sID := r.PathValue("id")
 
 	seasonID, err := strconv.Atoi(sID)
 	if err != nil {

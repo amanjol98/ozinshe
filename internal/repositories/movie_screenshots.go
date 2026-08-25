@@ -81,6 +81,11 @@ func (r *MovieScreenshotsRepository) DeleteScreenshot(ctx context.Context, scree
 	`
 
 	result, err := r.db.Exec(ctx, sqlQuery, screenshotID)
+
+	if err != nil {
+		return err
+	}
+
 	if result.RowsAffected() == 0 {
 		return ErrScreenshotNotFound
 	}

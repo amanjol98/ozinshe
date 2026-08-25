@@ -84,6 +84,7 @@ func (h *MovieScreenshotsHandler) DeleteScreenshot(w http.ResponseWriter, r *htt
 	if err != nil {
 		if errors.Is(err, repositories.ErrScreenshotNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

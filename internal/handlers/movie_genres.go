@@ -58,6 +58,11 @@ func (h *MovieGenreHandler) GetGenresOfMovie(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 
 	genres, err := h.service.GetGenresOfMovie(ctx, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if err := json.NewEncoder(w).Encode(genres); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

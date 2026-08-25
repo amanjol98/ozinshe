@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"ozinshe/internal/middleware"
 	"ozinshe/internal/services"
 	"strconv"
 )
@@ -43,4 +44,8 @@ func (h *FavoriteHandler) AddFavoriteMovieToUser(w http.ResponseWriter, r *http.
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *FavoriteHandler) GetFavoriteMovies(w http.ResponseWriter, r *http.Request) {
+	userID, err := r.Context().Value(middleware.UserIDKey).(int)
 }

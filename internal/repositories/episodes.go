@@ -77,6 +77,10 @@ func (r *EpisodeRepository) DeleteEpisode(ctx context.Context, episodeID int) er
 	`
 
 	result, err := r.db.Exec(ctx, sqlQuery, episodeID)
+	if err != nil {
+		return err
+	}
+
 	if result.RowsAffected() == 0 {
 		return ErrEpisodeNotFound
 	}

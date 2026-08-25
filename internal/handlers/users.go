@@ -124,9 +124,3 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-func (h *UserHandler) Test(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-
-	w.Write([]byte("Доступ разрешен"))
-}

@@ -86,3 +86,11 @@ type User struct {
 	BornAt      time.Time `json:"born_at"`
 	Role        string    `json:"role"`
 }
+
+type FavoriteMovieResponse struct {
+	ID          int      `json:"id"`
+	Title       string   `json:"title"`
+	ReleaseYear string   `json:"release_year"`
+	PosterURL   string   `json:"poster_url"`
+	Categories  []string `json:"categories"`
+}

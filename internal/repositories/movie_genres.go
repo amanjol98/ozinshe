@@ -79,6 +79,11 @@ func (r *MovieGenreRepository) DeleteGenreFromMovie(ctx context.Context, movieID
 	`
 
 	result, err := r.db.Exec(ctx, sqlQuery, movieID, genreID)
+
+	if err != nil {
+		return err
+	}
+
 	if result.RowsAffected() == 0 {
 		return ErrMovieGenreNotFound
 	}
