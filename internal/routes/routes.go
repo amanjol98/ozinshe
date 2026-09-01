@@ -33,8 +33,11 @@ func Register(
 	mux.HandleFunc("GET /categories/{id}", categoriesHandler.GetCategoryByID)
 	mux.HandleFunc("GET /movies/{id}/categories", movieCategoriesHandler.GetMovieCategories)
 	mux.HandleFunc("GET /movies/{id}/screenshots", movieScreenshotsHandler.GetScreenshots)
+	mux.HandleFunc("GET /home", movieHandler.GetHome)
 
 	mux.Handle("GET /users/me", authMiddleware.Auth(http.HandlerFunc(userHandler.Me)))
+	mux.Handle("PATCH /users/me", authMiddleware.Auth(http.HandlerFunc(userHandler.Update)))
+	mux.Handle("PATCH /users/me/password", authMiddleware.Auth(http.HandlerFunc(userHandler.UpdatePassword)))
 
 	mux.Handle(
 		"POST /movies",

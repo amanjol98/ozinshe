@@ -39,6 +39,33 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("search")
 
+	var categoryID *int
+	var genreID *int
+
+	categoryIDStr := r.URL.Query().Get("category_id")
+
+	if categoryIDStr != "" {
+		id, err := strconv.Atoi(categoryIDStr)
+		if err != nil {
+			http.Error(w, "Неверный category_id", http.StatusBadRequest)
+			return
+		}
+
+		categoryID = &id
+	}
+
+	genreIDStr := r.URL.Query().Get("genre_id")
+
+	if genreIDStr != "" {
+		id, err := strconv.Atoi(genreIDStr)
+		if err != nil {
+			http.Error(w, "Неверный genre_id", http.StatusBadRequest)
+			return
+		}
+
+		genreID = &id
+	}
+
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 
@@ -76,7 +103,7 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	offset := (page - 1) * limit
 
-	movies, err := h.service.GetAll(ctx, search, limit, offset)
+	movies, err := h.service.GetAll(ctx, search, categoryID, genreID, limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,6 +115,22 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "ошибка в JSON:", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *MovieHandler) GetHome(w http.ResponseWriter, r *http.Request) {
+	movies, err := h.service.GetHome(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(movies); err != nil {
+		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {

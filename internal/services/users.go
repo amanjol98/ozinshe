@@ -14,8 +14,7 @@ import (
 type UserRepository interface {
 	Register(
 		ctx context.Context,
-		name, email, password, phone_number string,
-		born_at time.Time,
+		email, passwordstring string,
 	) error
 
 	GetByEmail(
@@ -27,6 +26,18 @@ type UserRepository interface {
 	)
 
 	GetByID(ctx context.Context, id int) (models.User, error)
+
+	Update(
+		ctx context.Context,
+		userID int,
+		name string,
+		phoneNumber string,
+		bornAt *time.Time,
+	) error
+
+	UpdatePassword(ctx context.Context, userID int, password string) error
+
+	GetByIDWithPassword(ctx context.Context, userID int) (models.User, error)
 }
 
 type UserService struct {
@@ -45,14 +56,14 @@ var ErrInvalidCredentials = errors.New("неверный email или парол
 
 func (s *UserService) Register(
 	ctx context.Context,
-	name, email, password, phone_number string,
-	born_at time.Time,
+	email, password string,
 ) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	return s.repo.Register(ctx, name, email, string(hash), phone_number, born_at)
+
+	return s.repo.Register(ctx, email, string(hash))
 }
 
 func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {
@@ -83,4 +94,31 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 
 func (s *UserService) GetByID(ctx context.Context, id int) (models.User, error) {
 	return s.repo.GetByID(ctx, id)
+}
+
+func (s *UserService) Update(
+	ctx context.Context,
+	userID int,
+	name, phoneNumber string,
+	bornAt *time.Time,
+) error {
+	return s.repo.Update(ctx, userID, name, phoneNumber, bornAt)
+}
+
+func (s *UserService) UpdatePassword(ctx context.Context, userID int, oldPassword string, newPassword string) error {
+	user, err := s.repo.GetByIDWithPassword(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return errors.New("старый пароль указан неверно")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
 }
