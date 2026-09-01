@@ -21,3 +21,7 @@ func (s *FavoriteService) AddFavoriteMovieToUser(ctx context.Context, userID, mo
 func (s *FavoriteService) GetFavoriteMovies(ctx context.Context, userID int) ([]models.FavoriteMovieResponse, error) {
 	return s.repo.GetFavoriteMovies(ctx, userID)
 }
+
+func (s *FavoriteService) DeleteFavoriteMovieFromUser(ctx context.Context, userID, movieID int) error {
+	return s.repo.DeleteFavoriteMovieFromUser(ctx, userID, movieID)
+}

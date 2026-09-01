@@ -21,22 +21,18 @@ var ErrUserNotFound = errors.New("Вы ввели неправильный email
 
 func (r *UserRepository) Register(
 	ctx context.Context,
-	name, email, password, phone_number string,
-	born_at time.Time,
+	email, password string,
 ) error {
 	sqlQuery := `
-	INSERT INTO users (name, email, password, phone_number, born_at)
-	VALUES($1,$2,$3,$4,$5);
+	INSERT INTO users (email, password)
+	VALUES($1,$2);
 	`
 
 	_, err := r.db.Exec(
 		ctx,
 		sqlQuery,
-		name,
 		email,
 		password,
-		phone_number,
-		born_at,
 	)
 	return err
 }
@@ -100,6 +96,73 @@ func (r *UserRepository) GetByID(ctx context.Context, id int) (models.User, erro
 		&user.ID,
 		&user.Name,
 		&user.Email,
+		&user.PhoneNumber,
+		&user.BornAt,
+		&user.Role,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return models.User{}, ErrUserNotFound
+	}
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func (r *UserRepository) Update(
+	ctx context.Context,
+	userID int,
+	name string,
+	phoneNumber string,
+	bornAt *time.Time,
+) error {
+	sqlQuery := `
+		UPDATE users
+		SET name=$1,
+			phone_number=$2,
+			born_at=$3
+		WHERE id=$4;
+		`
+
+	_, err := r.db.Exec(ctx, sqlQuery, name, phoneNumber, bornAt, userID)
+	return err
+}
+
+func (r *UserRepository) UpdatePassword(ctx context.Context, userID int, password string) error {
+	sqlQuery := `
+	UPDATE users
+	SET password=$1
+	WHERE id=$2;
+	`
+
+	_, err := r.db.Exec(ctx, sqlQuery, password, userID)
+	return err
+}
+
+func (r *UserRepository) GetByIDWithPassword(ctx context.Context, userID int) (models.User, error) {
+	sqlQuery := `
+	SELECT
+		id,
+		name,
+		email,
+		password,
+		phone_number,
+		born_at,
+		role
+		FROM users
+		WHERE id=$1;
+	`
+
+	var user models.User
+
+	err := r.db.QueryRow(ctx, sqlQuery, userID).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
 		&user.PhoneNumber,
 		&user.BornAt,
 		&user.Role,

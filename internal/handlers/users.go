@@ -18,15 +18,13 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-type userRegister struct {
-	Name        string    `json:"name"`
-	Email       string    `json:"email"`
-	Password    string    `json:"password"`
-	PhoneNumber string    `json:"phone_number"`
-	BornAt      time.Time `json:"born_at"`
+type userUpdate struct {
+	Name        string     `json:"name"`
+	PhoneNumber string     `json:"phone_number"`
+	BornAt      *time.Time `json:"born_at"`
 }
 
-type userLogin struct {
+type userResponse struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -35,22 +33,27 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
+type updatePasswordResponse struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
+
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var req userRegister
+	var req userResponse
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if req.Name == "" || req.Email == "" || req.Password == "" {
+	if req.Email == "" || req.Password == "" {
 		http.Error(w, "Вы ввели пустое значение!", http.StatusBadRequest)
 		return
 	}
 
-	err := h.service.Register(ctx, req.Name, req.Email, req.Password, req.PhoneNumber, req.BornAt)
+	err := h.service.Register(ctx, req.Email, req.Password)
 	if err != nil {
 
 		http.Error(w, "Ошибка при регистрации пользователя", http.StatusInternalServerError)
@@ -63,7 +66,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var req userLogin
+	var req userResponse
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -123,4 +126,77 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
+		return
+	}
+
+	var req userUpdate
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Неверное тело запроса", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.Update(r.Context(), userID, req.Name, req.PhoneNumber, req.BornAt)
+	if err != nil {
+		http.Error(w, "Не удалось обновить пользователя", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := h.service.GetByID(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "Не удалось получить пользователя", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		http.Error(w, "Не удалось отправить ответ", http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
+		return
+	}
+
+	var req updatePasswordResponse
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Неверное тело запроса", http.StatusBadRequest)
+		return
+	}
+
+	if req.OldPassword == "" || req.NewPassword == "" {
+		http.Error(w, "Старый и новый пароль обязательны", http.StatusBadRequest)
+		return
+	}
+
+	if len(req.NewPassword) < 6 {
+		http.Error(w, "Новый пароль должен содержать минимум 6 символов", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.UpdatePassword(r.Context(), userID, req.OldPassword, req.NewPassword)
+	if err != nil {
+		if err.Error() == "старый пароль указан неверно" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, "Не удалось изменить пароль", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

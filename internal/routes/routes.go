@@ -10,6 +10,7 @@ func Register(
 	mux *http.ServeMux,
 	categoriesHandler *handlers.CategoryHandler,
 	episodeHandler *handlers.EpisodeHandler,
+	favoriteHandler *handlers.FavoriteHandler,
 	genreHandler *handlers.GenreHandler,
 	movieCategoriesHandler *handlers.MovieCategoryHandler,
 	movieGenresHandler *handlers.MovieGenreHandler,
@@ -32,8 +33,11 @@ func Register(
 	mux.HandleFunc("GET /categories/{id}", categoriesHandler.GetCategoryByID)
 	mux.HandleFunc("GET /movies/{id}/categories", movieCategoriesHandler.GetMovieCategories)
 	mux.HandleFunc("GET /movies/{id}/screenshots", movieScreenshotsHandler.GetScreenshots)
+	mux.HandleFunc("GET /home", movieHandler.GetHome)
 
 	mux.Handle("GET /users/me", authMiddleware.Auth(http.HandlerFunc(userHandler.Me)))
+	mux.Handle("PATCH /users/me", authMiddleware.Auth(http.HandlerFunc(userHandler.Update)))
+	mux.Handle("PATCH /users/me/password", authMiddleware.Auth(http.HandlerFunc(userHandler.UpdatePassword)))
 
 	mux.Handle(
 		"POST /movies",
@@ -225,4 +229,24 @@ func Register(
 		),
 	)
 
+	mux.Handle(
+		"GET /favorites",
+		authMiddleware.Auth(
+			http.HandlerFunc(favoriteHandler.GetFavoriteMovies),
+		),
+	)
+
+	mux.Handle(
+		"POST /favorites",
+		authMiddleware.Auth(
+			http.HandlerFunc(favoriteHandler.AddFavoriteMovieToUser),
+		),
+	)
+
+	mux.Handle(
+		"DELETE /favorites/{movie_id}",
+		authMiddleware.Auth(
+			http.HandlerFunc(favoriteHandler.DeleteFavoriteMovieFromUser),
+		),
+	)
 }

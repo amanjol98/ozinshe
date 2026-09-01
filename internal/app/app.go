@@ -62,12 +62,17 @@ func New(ctx context.Context, secretKey string) (*http.ServeMux, func(), error) 
 	)
 	movieHandler := handlers.NewMovieHandler(movieService)
 
+	favoriteRepo := repositories.NewFavoriteRepository(conn)
+	favoriteService := services.NewFavoriteService(favoriteRepo)
+	favoriteHandler := handlers.NewFavoriteHandler(favoriteService)
+
 	mux := http.NewServeMux()
 
 	routes.Register(
 		mux,
 		categoriesHandler,
 		episodeHandler,
+		favoriteHandler,
 		genreHandler,
 		movieCategoriesHandler,
 		movieGenresHandler,

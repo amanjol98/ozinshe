@@ -38,9 +38,17 @@ func NewMovieService(
 	}
 }
 
-func (s *MovieService) GetAll(ctx context.Context, search string, limit, offset int) ([]models.Movie, error) {
+func (s *MovieService) GetAll(
+	ctx context.Context,
+	search string,
+	categoryID, genreID *int,
+	limit, offset int) ([]models.Movie, error) {
 	search = strings.TrimSpace(search)
-	return s.repo.GetAll(ctx, search, limit, offset)
+	return s.repo.GetAll(ctx, search, categoryID, genreID, limit, offset)
+}
+
+func (s *MovieService) GetHome(ctx context.Context) ([]models.Movie, error) {
+	return s.repo.GetHome(ctx)
 }
 
 func (s *MovieService) GetByID(ctx context.Context, id int) (models.MovieResponse, error) {

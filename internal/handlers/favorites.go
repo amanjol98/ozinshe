@@ -23,23 +23,20 @@ type addMovieReq struct {
 }
 
 func (h *FavoriteHandler) AddFavoriteMovieToUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var req addMovieReq
-
-	idString := r.PathValue("user_id")
-	userID, err := strconv.Atoi(idString)
-	if err != nil {
-		http.Error(w, "Неверный ID", http.StatusBadRequest)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
 		return
 	}
+
+	var req addMovieReq
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Ввели неверный ID фильма", http.StatusBadRequest)
 		return
 	}
 
-	err = h.service.AddFavoriteMovieToUser(ctx, userID, req.MovieID)
+	err := h.service.AddFavoriteMovieToUser(r.Context(), userID, req.MovieID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -72,4 +69,32 @@ func (h *FavoriteHandler) GetFavoriteMovies(w http.ResponseWriter, r *http.Reque
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *FavoriteHandler) DeleteFavoriteMovieFromUser(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
+		return
+	}
+
+	movieIDstr := r.PathValue("movie_id")
+	movieID, err := strconv.Atoi(movieIDstr)
+	if err != nil {
+		http.Error(w, "Неверный ID фильма", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteFavoriteMovieFromUser(r.Context(), userID, movieID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrMovieNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -42,7 +42,7 @@ func (r *FavoriteRepository) GetFavoriteMovies(ctx context.Context, userID int) 
 		JOIN movies m ON m.id = f.movie_id
 		LEFT JOIN movie_categories mc ON mc.movie_id=m.id
 		LEFT JOIN categories c ON c.id=mc.category_id
-		WHERE f.user_id=&1
+		WHERE f.user_id=$1
 		GROUP BY
 		m.id,
 		m.title,
@@ -82,4 +82,26 @@ func (r *FavoriteRepository) GetFavoriteMovies(ctx context.Context, userID int) 
 	}
 
 	return favorites, nil
+}
+
+func (r *FavoriteRepository) DeleteFavoriteMovieFromUser(
+	ctx context.Context,
+	userID, movieID int,
+) error {
+	sqlQuery := `
+	DELETE FROM favorites
+	WHERE user_id=$1
+	AND movie_id=$2;
+	`
+
+	result, err := r.db.Exec(ctx, sqlQuery, userID, movieID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrMovieNotFound
+	}
+
+	return nil
 }

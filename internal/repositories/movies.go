@@ -3,7 +3,9 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"ozinshe/internal/models"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -18,50 +20,79 @@ func NewMovieRepository(db *pgx.Conn) *MovieRepository {
 
 var ErrMovieNotFound = errors.New("Нет фильма с таким ID")
 
-func (r *MovieRepository) GetAll(ctx context.Context, search string, limit, offset int) ([]models.Movie, error) {
+func (r *MovieRepository) GetAll(
+	ctx context.Context,
+	search string,
+	categoryID, genreID *int,
+	limit, offset int,
+) ([]models.Movie, error) {
+
+	sqlQuery := `
+		SELECT
+			m.id,
+			m.title,
+			m.release_year,
+			m.description,
+			m.duration,
+			m.poster_url,
+			m.director,
+			m.producer,
+			m.video_id
+		FROM movies m
+	`
 
 	var (
-		sqlQuery string
-		args     []any
+		conditions []string
+		args       []any
+		argID      = 1
 	)
 
-	if search == "" {
-		sqlQuery = `
-	SELECT 
-	id,
-	title,
-	release_year,
-	description,
-	duration,
-	poster_url,
-	director,
-	producer,
-	video_id
-	FROM movies
-	LIMIT $1
-	OFFSET $2;
-	`
-		args = append(args, limit, offset)
-	} else {
-		sqlQuery = `
-	SELECT 
-	id,
-	title,
-	release_year,
-	description,
-	duration,
-	poster_url,
-	director,
-	producer,
-	video_id
-	FROM movies
-	WHERE title ILIKE $3
-	LIMIT $1
-	OFFSET $2;
-	`
+	if search != "" {
+		conditions = append(conditions, fmt.Sprintf("m.title ILIKE $%d", argID))
 
-		args = append(args, limit, offset, "%"+search+"%")
+		args = append(args, "%"+search+"%")
+		argID++
 	}
+
+	if categoryID != nil {
+		conditions = append(conditions, fmt.Sprintf(`
+			EXISTS(
+				SELECT 1
+				FROM movie_categories mc
+				WHERE mc.movie_id=m.id
+				AND mc.category_id=$%d	
+			)`, argID,
+		))
+
+		args = append(args, *categoryID)
+		argID++
+	}
+
+	if genreID != nil {
+		conditions = append(conditions, fmt.Sprintf(`
+			EXISTS(
+				SELECT 1
+				FROM movie_genres mg
+				WHERE mg.movie_id=m.id
+				AND mg.genre_id=$%d
+			)`, argID,
+		))
+
+		args = append(args, *genreID)
+		argID++
+	}
+
+	if len(conditions) > 0 {
+		sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	sqlQuery += fmt.Sprintf(
+		" ORDER BY m.id LIMIT $%d OFFSET $%d;",
+		argID,
+		argID+1,
+	)
+
+	args = append(args, limit, offset)
 
 	rows, err := r.db.Query(ctx, sqlQuery, args...)
 	if err != nil {
@@ -97,6 +128,60 @@ func (r *MovieRepository) GetAll(ctx context.Context, search string, limit, offs
 
 	return movies, nil
 
+}
+
+func (r *MovieRepository) GetHome(ctx context.Context) ([]models.Movie, error) {
+	sqlQuery := `
+	SELECT
+		id,
+		title,
+		release_year,
+		description,
+		duration,
+		poster_url,
+		director,
+		producer,
+		video_id
+	FROM movies
+	ORDER BY release_year DESC, id DESC
+	LIMIT 10;
+	`
+
+	rows, err := r.db.Query(ctx, sqlQuery)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var movies []models.Movie
+
+	for rows.Next() {
+		var movie models.Movie
+
+		if err := rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.ReleaseYear,
+			&movie.Description,
+			&movie.Duration,
+			&movie.PosterURL,
+			&movie.Director,
+			&movie.Producer,
+			&movie.VideoID,
+		); err != nil {
+			return nil, err
+		}
+
+		movies = append(movies, movie)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return movies, nil
 }
 
 func (r *MovieRepository) GetByID(ctx context.Context, id int) (models.Movie, error) {
