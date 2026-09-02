@@ -46,7 +46,7 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if categoryIDStr != "" {
 		id, err := strconv.Atoi(categoryIDStr)
-		if err != nil {
+		if err != nil || id <= 0 {
 			http.Error(w, "Неверный category_id", http.StatusBadRequest)
 			return
 		}
@@ -58,7 +58,7 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if genreIDStr != "" {
 		id, err := strconv.Atoi(genreIDStr)
-		if err != nil {
+		if err != nil || id <= 0 {
 			http.Error(w, "Неверный genre_id", http.StatusBadRequest)
 			return
 		}
@@ -188,6 +188,10 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		if errors.Is(err, errors.New("Ввели пустое значение")) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "Ошибка в создании фильма", http.StatusInternalServerError)
 		return
 	}

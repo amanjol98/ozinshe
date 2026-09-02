@@ -54,8 +54,8 @@ func (h *FavoriteHandler) GetFavoriteMovies(w http.ResponseWriter, r *http.Reque
 
 	favoriteMovieResponse, err := h.service.GetFavoriteMovies(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, repositories.ErrUserNotFound) {
-			http.Error(w, "Пользователь не найден", http.StatusNotFound)
+		if errors.Is(err, repositories.ErrFavoriteNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 

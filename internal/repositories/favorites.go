@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"ozinshe/internal/models"
 
 	"github.com/jackc/pgx/v5"
@@ -14,6 +15,8 @@ type FavoriteRepository struct {
 func NewFavoriteRepository(db *pgx.Conn) *FavoriteRepository {
 	return &FavoriteRepository{db: db}
 }
+
+var ErrFavoriteNotFound = errors.New("Фильм не найден в избранном")
 
 func (r *FavoriteRepository) AddFavoriteMovieToUser(ctx context.Context, userID, movieID int) error {
 	sqlQuery := `
@@ -56,6 +59,8 @@ func (r *FavoriteRepository) GetFavoriteMovies(ctx context.Context, userID int) 
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	var favorites []models.FavoriteMovieResponse
 
@@ -100,7 +105,7 @@ func (r *FavoriteRepository) DeleteFavoriteMovieFromUser(
 	}
 
 	if result.RowsAffected() == 0 {
-		return ErrMovieNotFound
+		return ErrFavoriteNotFound
 	}
 
 	return nil

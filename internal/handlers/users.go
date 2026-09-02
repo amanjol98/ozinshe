@@ -142,6 +142,11 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Name == "" || req.PhoneNumber == "" {
+		http.Error(w, "Вы ввели пустое значение!", http.StatusBadRequest)
+		return
+	}
+
 	err := h.service.Update(r.Context(), userID, req.Name, req.PhoneNumber, req.BornAt)
 	if err != nil {
 		http.Error(w, "Не удалось обновить пользователя", http.StatusInternalServerError)
