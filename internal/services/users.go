@@ -53,6 +53,7 @@ func NewUserService(repo UserRepository, tokenService *middleware.TokenService) 
 }
 
 var ErrInvalidCredentials = errors.New("неверный email или пароль")
+var ErrEmailAlreadyExists = errors.New("email уже существует")
 
 func (s *UserService) Register(
 	ctx context.Context,
@@ -63,7 +64,15 @@ func (s *UserService) Register(
 		return err
 	}
 
-	return s.repo.Register(ctx, email, string(hash))
+	err = s.repo.Register(ctx, email, string(hash))
+	if err != nil {
+		if errors.Is(err, repositories.ErrEmailAlreadyExists) {
+			return ErrEmailAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"ozinshe/internal/models"
 	"ozinshe/internal/repositories"
@@ -37,6 +38,8 @@ func NewMovieService(
 		movieScreenshotsService: movieScreenshotsService,
 	}
 }
+
+var ErrEmptyTitle = errors.New("Ввели пустое значение")
 
 func (s *MovieService) GetAll(
 	ctx context.Context,
@@ -108,7 +111,7 @@ func (s *MovieService) CreateMovie(
 	categoryIDs []int,
 ) (models.CreateMovieModel, error) {
 	if strings.TrimSpace(title) == "" {
-		return models.CreateMovieModel{}, fmt.Errorf("Ввели пустое значение")
+		return models.CreateMovieModel{}, ErrEmptyTitle
 	}
 
 	createdMovie, err := s.repo.CreateMovie(

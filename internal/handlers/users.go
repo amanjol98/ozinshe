@@ -24,7 +24,7 @@ type userUpdate struct {
 	BornAt      *time.Time `json:"born_at"`
 }
 
-type userResponse struct {
+type userAuthRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -41,7 +41,7 @@ type updatePasswordResponse struct {
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var req userResponse
+	var req userAuthRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -55,7 +55,10 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.Register(ctx, req.Email, req.Password)
 	if err != nil {
-
+		if errors.Is(err, services.ErrEmailAlreadyExists) {
+			http.Error(w, "email уже существует", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Ошибка при регистрации пользователя", http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +69,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var req userResponse
+	var req userAuthRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -75,6 +78,11 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, "Вы ввели пустое значение!", http.StatusBadRequest)
+		return
+	}
+
+	if len(req.Password) < 6 {
+		http.Error(w, "Пароль должен содержать минимум 6 символов", http.StatusBadRequest)
 		return
 	}
 

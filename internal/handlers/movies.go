@@ -188,7 +188,7 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		if errors.Is(err, errors.New("Ввели пустое значение")) {
+		if errors.Is(err, services.ErrEmptyTitle) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserRepository struct {
@@ -17,7 +18,9 @@ func NewUserRepository(db *pgx.Conn) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-var ErrUserNotFound = errors.New("Вы ввели неправильный email или пароль")
+var ErrUserNotFound = errors.New("пользователь не найден")
+
+var ErrEmailAlreadyExists = errors.New("email уже существует")
 
 func (r *UserRepository) Register(
 	ctx context.Context,
@@ -34,7 +37,18 @@ func (r *UserRepository) Register(
 		email,
 		password,
 	)
-	return err
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrEmailAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (r *UserRepository) GetByEmail(
