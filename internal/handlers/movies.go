@@ -33,6 +33,20 @@ func NewMovieHandler(service *services.MovieService) *MovieHandler {
 	}
 }
 
+// GetAll godoc
+// @Summary Получить список фильмов
+// @Description Возвращает список фильмов с поиском, фильтрацией по категории и жанру, а также пагинацией.
+// @Tags Movies
+// @Produce json
+// @Param search query string false "Поиск по названию"
+// @Param category_id query int false "ID категории"
+// @Param genre_id query int false "ID жанра"
+// @Param page query int false "Номер страницы"
+// @Param limit query int false "Количество фильмов на странице"
+// @Success 200 {array} models.Movie
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /movies [get]
 func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var err error
@@ -117,6 +131,14 @@ func (h *MovieHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetHome godoc
+// @Summary На главную
+// @Description Возвращает список фильмов с главной страницы.
+// @Tags Movies
+// @Produce json
+// @Success 200 {array} models.Movie
+// @Failure 500 {object} map[string]string
+// @Router /home [get]
 func (h *MovieHandler) GetHome(w http.ResponseWriter, r *http.Request) {
 	movies, err := h.service.GetHome(r.Context())
 	if err != nil {
@@ -133,6 +155,17 @@ func (h *MovieHandler) GetHome(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// GetByID godoc
+// @Summary Получить фильм по ID
+// @Description Возвращает выбранный по ID фильм.
+// @Tags Movies
+// @Produce json
+// @Param id path int true "ID фильма"
+// @Success 200 {object} models.Movie
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /movies/{id} [get]
 func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -141,6 +174,11 @@ func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		http.Error(w, "неверный ID", http.StatusBadRequest)
+		return
+	}
+
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
 		return
 	}
 
@@ -162,6 +200,20 @@ func (h *MovieHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CreateMovie godoc
+// @Summary Создать фильм
+// @Description Создает новый фильм. Доступно только администраторам.
+// @Tags Movies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body movieRequest true "Данные для создания"
+// @Success 201 {object} models.CreateMovieModel
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /movies [post]
 func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -206,6 +258,19 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DeleteMovie godoc
+// @Summary Удалить фильм
+// @Description Удаляет выбранный фильм. Доступно только администраторам.
+// @Tags Movies
+// @Security BearerAuth
+// @Param id path int true "ID фильма"
+// @Success 204
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /movies/{id} [delete]
 func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -215,6 +280,11 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		http.Error(w, "неверный ID", http.StatusBadRequest)
+		return
+	}
+
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
 		return
 	}
 
@@ -231,6 +301,22 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// UpdateMovie godoc
+// @Summary Обновить фильм
+// @Description Обновляет выбранный фильм. Доступно только администраторам.
+// @Tags Movies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "ID фильма"
+// @Param request body movieRequest true "Данные для обновления"
+// @Success 200 {object} models.CreateMovieModel
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /movies/{id} [patch]
 func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -243,8 +329,14 @@ func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
+		return
+	}
+
 	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+
 		http.Error(w, "Неправильный JSON", http.StatusBadRequest)
 		return
 	}
@@ -260,10 +352,14 @@ func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		VideoID:     request.VideoID,
 	}
 
-	movie, err := h.service.UpdateMovie(ctx, req, id)
+	movie, err := h.service.UpdateMovie(ctx, req, request.GenreIDs, request.CategoryIDs, id)
 	if err != nil {
 		if errors.Is(err, repositories.ErrMovieNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, services.ErrEmptyTitle) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, "Ошибка во время изменении фильма", http.StatusInternalServerError)

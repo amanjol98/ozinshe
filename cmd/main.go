@@ -7,9 +7,19 @@ import (
 	"os"
 	"ozinshe/internal/app"
 
+	_ "ozinshe/docs"
+
 	"github.com/joho/godotenv"
 )
 
+// @title Özinshe API
+// @version 1.0
+// @description REST API для приложения Özinshe.
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	err := godotenv.Load()
 	if err != nil {

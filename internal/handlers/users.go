@@ -33,7 +33,7 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-type updatePasswordResponse struct {
+type updatePasswordRequest struct {
 	OldPassword string `json:"old_password"`
 	NewPassword string `json:"new_password"`
 }
@@ -109,6 +109,17 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Me godoc
+// @Summary Получить текщего пользователя
+// @Description Возвращает данные пользователя, авторизованного через JWT.
+// @Tags Users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} models.User
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/me [get]
 func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
@@ -136,6 +147,19 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Update godoc
+// @Summary Обновить данные текущего пользователя
+// @Description Обновляет имя, номер телефона и дату рождения текущего пользователя.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body userUpdate true "Данные для обновления"
+// @Success 200 {object} models.User
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/me [patch]
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
@@ -176,6 +200,18 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdatePassword godoc
+// @Summary Обновить пароль текущего пользователя
+// @Description Обновляет пароль текущего пользователя.
+// @Tags Users
+// @Accept json
+// @Security BearerAuth
+// @Param request body updatePasswordRequest true "Данные для обновления"
+// @Success 204
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/me/password [patch]
 func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
@@ -183,7 +219,7 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req updatePasswordResponse
+	var req updatePasswordRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Неверное тело запроса", http.StatusBadRequest)

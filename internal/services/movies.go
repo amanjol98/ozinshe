@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"ozinshe/internal/models"
 	"ozinshe/internal/repositories"
 
@@ -165,10 +164,58 @@ func (s *MovieService) DeleteMovie(ctx context.Context, id int) error {
 	return s.repo.DeleteMovie(ctx, id)
 }
 
-func (s *MovieService) UpdateMovie(ctx context.Context, movie models.Movie, id int) (models.Movie, error) {
+func (s *MovieService) UpdateMovie(
+	ctx context.Context,
+	movie models.Movie,
+	genreIDs []int,
+	categoryIDs []int,
+	id int,
+) (models.CreateMovieModel, error) {
 	if strings.TrimSpace(movie.Title) == "" {
-		return models.Movie{}, fmt.Errorf("Ввели пустое значение")
+		return models.CreateMovieModel{}, ErrEmptyTitle
 	}
 
-	return s.repo.UpdateMovie(ctx, movie, id)
+	updatedMovie, err := s.repo.UpdateMovie(ctx, movie, id)
+	if err != nil {
+		return models.CreateMovieModel{}, err
+	}
+
+	err = s.genreService.DeleteAllGenresFromMovie(ctx, id)
+	if err != nil {
+		return models.CreateMovieModel{}, err
+	}
+
+	for _, genreID := range genreIDs {
+		err := s.genreService.AddGenreToMovie(ctx, id, genreID)
+		if err != nil {
+			return models.CreateMovieModel{}, err
+		}
+	}
+
+	err = s.categoryService.DeleteAllCategoriesFromMovie(ctx, id)
+	if err != nil {
+		return models.CreateMovieModel{}, err
+	}
+
+	for _, categoryID := range categoryIDs {
+		err := s.categoryService.AddCategoryToMovie(ctx, id, categoryID)
+		if err != nil {
+			return models.CreateMovieModel{}, err
+		}
+	}
+
+	genres, err := s.genreService.GetGenresOfMovie(ctx, id)
+	if err != nil {
+		return models.CreateMovieModel{}, err
+	}
+	categories, err := s.categoryService.GetMovieCategories(ctx, id)
+	if err != nil {
+		return models.CreateMovieModel{}, err
+	}
+
+	return models.CreateMovieModel{
+		Movie:      updatedMovie,
+		Genres:     genres,
+		Categories: categories,
+	}, nil
 }

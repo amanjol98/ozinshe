@@ -6,3 +6,9 @@ migrate-up:
 
 migrate-down:
 	migrate -path ./migrations -database "postgres://postgres:1111@localhost:5432/ozinshe?sslmode=disable" down
+
+swagger:
+	swag init -g cmd/main.go
+
+fmt:
+	gofmt -w .

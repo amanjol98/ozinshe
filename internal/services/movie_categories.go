@@ -25,3 +25,7 @@ func (s *MovieCategoryService) GetMovieCategories(ctx context.Context, movieID i
 func (s *MovieCategoryService) DeleteCategoryFromMovie(ctx context.Context, movieID, categoryID int) error {
 	return s.repo.DeleteCategoryFromMovie(ctx, movieID, categoryID)
 }
+
+func (s *MovieCategoryService) DeleteAllCategoriesFromMovie(ctx context.Context, movieID int) error {
+	return s.repo.DeleteAllCategoriesFromMovie(ctx, movieID)
+}

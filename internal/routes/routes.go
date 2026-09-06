@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"ozinshe/internal/handlers"
 	"ozinshe/internal/middleware"
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func Register(
@@ -20,6 +22,7 @@ func Register(
 	userHandler *handlers.UserHandler,
 	authMiddleware *middleware.AuthMiddleware,
 ) {
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	mux.HandleFunc("POST /register", userHandler.Register)
 	mux.HandleFunc("POST /login", userHandler.Login)

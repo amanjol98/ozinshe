@@ -25,3 +25,7 @@ func (s *MovieGenreService) GetGenresOfMovie(ctx context.Context, movieID int) (
 func (s *MovieGenreService) DeleteGenreFromMovie(ctx context.Context, movieID, genreID int) error {
 	return s.repo.DeleteGenreFromMovie(ctx, movieID, genreID)
 }
+
+func (s *MovieGenreService) DeleteAllGenresFromMovie(ctx context.Context, movieID int) error {
+	return s.repo.DeleteAllGenresFromMovie(ctx, movieID)
+}

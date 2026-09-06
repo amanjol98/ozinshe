@@ -1,0 +1,803 @@
+basePath: /
+definitions:
+  handlers.addMovieReq:
+    properties:
+      movie_id:
+        type: integer
+    type: object
+  handlers.categoryReq:
+    properties:
+      name:
+        type: string
+    type: object
+  handlers.genreRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  handlers.updatePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  handlers.userUpdate:
+    properties:
+      born_at:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  models.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.FavoriteMovieResponse:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      poster_url:
+        type: string
+      release_year:
+        type: string
+      title:
+        type: string
+    type: object
+  models.Genre:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Movie:
+    properties:
+      description:
+        type: string
+      director:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      poster_url:
+        type: string
+      producer:
+        type: string
+      release_year:
+        type: integer
+      title:
+        type: string
+      video_id:
+        type: string
+    type: object
+  models.User:
+    properties:
+      born_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone_number:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API для приложения Özinshe.
+  title: Özinshe API
+  version: "1.0"
+paths:
+  /categories:
+    get:
+      description: Возвращает список всех доступных категорий.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список всех категорий
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      description: Создает новую категорию. Доступно только администраторам.
+      parameters:
+      - description: Данные для создания
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.categoryReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Создает категорию
+      tags:
+      - Categories
+  /categories/{id}:
+    delete:
+      description: Удаляет выбранную категорию. Доступно только администраторам.
+      parameters:
+      - description: ID категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить категорию
+      tags:
+      - Categories
+    get:
+      description: Возвращает выбранную по ID категорию.
+      parameters:
+      - description: ID категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить категорию по ID
+      tags:
+      - Categories
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет выбранную категорию. Доступно только администраторам.
+      parameters:
+      - description: ID категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для обновления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.categoryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить категорию
+      tags:
+      - Categories
+  /favorites:
+    get:
+      description: Возвращает список всех избранных фильмов текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.FavoriteMovieResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получить список избранных фильмов
+      tags:
+      - Favorites
+    post:
+      consumes:
+      - application/json
+      description: Добавляет выбранный фильм в список избранных текущего пользователя.
+      parameters:
+      - description: Данные для добавления фильма
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.addMovieReq'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Добавить фильм в избранные
+      tags:
+      - Favorites
+  /favorites/{movie_id}:
+    delete:
+      description: Удаляет выбранный фильм из списка избранных текущего пользователя.
+      parameters:
+      - description: ID фильма
+        in: path
+        name: movie_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить фильм из избранного
+      tags:
+      - Favorites
+  /genres:
+    get:
+      description: Возвращает списко всех доступных жанров.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Genre'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список всех жанров
+      tags:
+      - Genres
+    post:
+      consumes:
+      - application/json
+      description: Создает новый жанр. Доступно только администраторам.
+      parameters:
+      - description: Данные для создания
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.genreRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Genre'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Создает жанр
+      tags:
+      - Genres
+  /genres/{id}:
+    delete:
+      description: Удаляет выбранный жанр. Доступно только администраторам.
+      parameters:
+      - description: ID жанра
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить жанр
+      tags:
+      - Genres
+    get:
+      description: Возвращает выбранный по ID жанр
+      parameters:
+      - description: ID жанра
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Genre'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить жанр по ID
+      tags:
+      - Genres
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет выбранный жанр. Доступно только администраторам.
+      parameters:
+      - description: ID жанра
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для обновления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.genreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Genre'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить жанр
+      tags:
+      - Genres
+  /movies:
+    get:
+      description: Возвращает список фильмов с поиском, фильтрацией по категории и
+        жанру, а также пагинацией.
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: ID категории
+        in: query
+        name: category_id
+        type: integer
+      - description: ID жанра
+        in: query
+        name: genre_id
+        type: integer
+      - description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - description: Количество фильмов на странице
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Movie'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список фильмов
+      tags:
+      - Movies
+  /users/me:
+    get:
+      description: Возвращает данные пользователя, авторизованного через JWT.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получить текщего пользователя
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет имя, номер телефона и дату рождения текущего пользователя.
+      parameters:
+      - description: Данные для обновления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.userUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить данные текущего пользователя
+      tags:
+      - Users
+  /users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет пароль текущего пользователя.
+      parameters:
+      - description: Данные для обновления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updatePasswordRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить пароль текущего пользователя
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

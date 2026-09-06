@@ -87,3 +87,20 @@ func (r *MovieCategoryRepositry) DeleteCategoryFromMovie(ctx context.Context, mo
 
 	return nil
 }
+
+func (r *MovieCategoryRepositry) DeleteAllCategoriesFromMovie(ctx context.Context, movieID int) error {
+	sqlQuery := `
+	DELETE FROM movie_categories
+	WHERE movie_id=$1;
+	`
+
+	result, err := r.db.Exec(ctx, sqlQuery, movieID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrMovieNotFound
+	}
+	return nil
+}

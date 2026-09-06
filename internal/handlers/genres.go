@@ -21,6 +21,14 @@ type genreRequest struct {
 	Name string `json:"name"`
 }
 
+// GetAllGenres godoc
+// @Summary Получить список всех жанров
+// @Description Возвращает списко всех доступных жанров.
+// @Tags Genres
+// @Produce json
+// @Success 200 {array} models.Genre
+// @Failure 500 {object} map[string]string
+// @Router /genres [get]
 func (h *GenreHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -38,6 +46,17 @@ func (h *GenreHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetGenreByID godoc
+// @Summary Получить жанр по ID
+// @Description Возвращает выбранный по ID жанр
+// @Tags Genres
+// @Produce json
+// @Param id path int true "ID жанра"
+// @Success 200 {object} models.Genre
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /genres/{id} [get]
 func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -45,6 +64,11 @@ func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		http.Error(w, "Неверный ID", http.StatusBadRequest)
+		return
+	}
+
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
 		return
 	}
 
@@ -66,6 +90,20 @@ func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CreateGenre godoc
+// @Summary Создать жанр
+// @Description Создает новый жанр. Доступно только администраторам.
+// @Tags Genres
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body genreRequest true "Данные для создания"
+// @Success 201 {object} models.Genre
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /genres [post]
 func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -92,13 +130,31 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeleteGenre godoc
+// @Summary Удалить жанр
+// @Description Удаляет выбранный жанр. Доступно только администраторам.
+// @Tags Genres
+// @Security BearerAuth
+// @Param id path int true "ID жанра"
+// @Success 204
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /genres/{id} [delete]
 func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	idString := r.PathValue("id")
-	id, err := strconv.Atoi(idString)
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Неверный ID", http.StatusBadRequest)
+		return
+	}
+
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
 		return
 	}
 
@@ -115,15 +171,36 @@ func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// UpdateGenre godoc
+// @Summary Обновить жанр
+// @Description Обновляет выбранный жанр. Доступно только администраторам.
+// @Tags Genres
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "ID жанра"
+// @Param request body genreRequest true "Данные для обновления"
+// @Success 200 {object} models.Genre
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /genres/{id} [patch]
 func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var request genreRequest
 
-	idString := r.PathValue("id")
-	id, err := strconv.Atoi(idString)
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Неверный ID", http.StatusBadRequest)
+		return
+	}
+
+	if id <= 0 {
+		http.Error(w, "ID должен быть больше 0", http.StatusBadRequest)
 		return
 	}
 

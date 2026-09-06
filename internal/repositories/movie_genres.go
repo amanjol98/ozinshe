@@ -89,3 +89,20 @@ func (r *MovieGenreRepository) DeleteGenreFromMovie(ctx context.Context, movieID
 	}
 	return err
 }
+
+func (r *MovieGenreRepository) DeleteAllGenresFromMovie(ctx context.Context, movieID int) error {
+	sqlQuery := `
+	DELETE FROM movie_genres
+	WHERE movie_id=$1;
+	`
+
+	result, err := r.db.Exec(ctx, sqlQuery, movieID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrMovieNotFound
+	}
+	return nil
+}
